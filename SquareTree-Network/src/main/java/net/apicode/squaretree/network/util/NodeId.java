@@ -4,6 +4,8 @@ import java.util.Objects;
 
 public class NodeId {
 
+  public static final NodeId SERVER = new NodeId("SERVER", "server");
+
   private final String sessionId;
   private final String name;
 

@@ -3,8 +3,11 @@ package net.apicode.squaretree.network.packet;
 import java.util.Collection;
 import java.util.function.Consumer;
 import net.apicode.squaretree.network.NetworkException;
+import net.apicode.squaretree.network.NetworkNode;
 import net.apicode.squaretree.network.handler.PacketReceiver;
 import net.apicode.squaretree.network.util.SecurityInfo;
+import net.apicode.squaretree.network.util.function.DoubleConsumer;
+import org.jetbrains.annotations.NotNull;
 
 public interface ProtocolManager {
 
@@ -12,10 +15,10 @@ public interface ProtocolManager {
 
   void removePacketListener(PacketReceiver<?> packetReceiver);
 
-  <T extends Packet<?>> PacketReceiver<T> addPacketListener(Consumer<T> consumer, Class<T> packetClass);
+  <T extends Packet<?>> PacketReceiver<T> addPacketListener(@NotNull DoubleConsumer<T, NetworkNode> consumer,
+      @NotNull Class<T> packetClass);
 
   Collection<PacketReceiver<?>> getPacketListeners(Class<? extends Packet<?>> packetClass);
-
 
   Class<? extends Packet> getPacketClass(int type) throws NetworkException;
 

@@ -10,13 +10,16 @@ import net.apicode.squaretree.network.handler.NetworkHandler;
 import net.apicode.squaretree.network.handler.PacketReceiver;
 import net.apicode.squaretree.network.packet.Packet;
 import net.apicode.squaretree.network.packet.PacketLink;
+import net.apicode.squaretree.network.packet.PacketQueue;
 import net.apicode.squaretree.network.packet.ProtocolManager;
 import net.apicode.squaretree.network.util.ConnectionInfo;
+import net.apicode.squaretree.network.util.NodeId;
 import net.apicode.squaretree.network.util.PrioritizedList;
 import net.apicode.squaretree.network.util.SecurityInfo;
+import net.apicode.squaretree.network.util.function.DoubleConsumer;
 import org.jetbrains.annotations.NotNull;
 
-public class BridgeNetwork implements ProtocolManager {
+public abstract class BridgeNetwork implements ProtocolManager, PacketAdapter {
 
   private final HashMap<Integer, Class<? extends Packet>> packets = new HashMap<>();
   private final HashMap<Class<? extends Packet>, Integer> packetLinkers = new HashMap<>();
@@ -24,11 +27,14 @@ public class BridgeNetwork implements ProtocolManager {
   private final ConnectionInfo connectionInfo;
   private final SecurityInfo securityInfo;
   private final PrioritizedList<NetworkHandler> networkHandlers = new PrioritizedList<>();
+  private final PacketQueue queue = new PacketQueue();
 
   public BridgeNetwork(@NotNull ConnectionInfo connectionInfo, @NotNull SecurityInfo securityInfo) {
     this.connectionInfo = connectionInfo;
     this.securityInfo = securityInfo;
   }
+
+  public abstract NetworkNode getNetworkNode();
 
   @Override
   public void addPacketListener(@NotNull PacketReceiver<?> packetReceiver) {
@@ -50,7 +56,7 @@ public class BridgeNetwork implements ProtocolManager {
   }
 
   @Override
-  public Collection<PacketReceiver<?>> getPacketListeners(@NotNull Class<? extends Packet<?>> packetClass) {
+  public Collection<PacketReceiver<?>> getPacketListeners(Class<? extends Packet<?>> packetClass) {
     if(packetListeners.containsKey(packetClass)) {
       PrioritizedList<PacketReceiver<?>> packetReceivers = packetListeners.get(packetClass);
       return Collections.unmodifiableCollection(packetReceivers);
@@ -80,7 +86,7 @@ public class BridgeNetwork implements ProtocolManager {
     return Collections.unmodifiableCollection(networkHandlers);
   }
 
-  public <T extends Packet<?>> PacketReceiver<T> addPacketListener(@NotNull Consumer<T> consumer,
+  public <T extends Packet<?>> PacketReceiver<T> addPacketListener(@NotNull DoubleConsumer<T, NetworkNode> consumer,
       @NotNull Class<T> packetClass) {
     PacketReceiver<T> receiver = new PacketReceiver<T>() {
       @Override
@@ -89,8 +95,8 @@ public class BridgeNetwork implements ProtocolManager {
       }
 
       @Override
-      public void receive(T packet) {
-        consumer.accept(packet);
+      public void receive(T packet, NetworkNode nodeId) {
+        consumer.accept(packet, nodeId);
       }
     };
     addPacketListener(receiver);
@@ -148,6 +154,11 @@ public class BridgeNetwork implements ProtocolManager {
     } catch (IllegalAccessException e) {
       throw new NetworkException("Failed to access constructor", e);
     }
+  }
+
+  @Override
+  public PacketQueue getWaitingQueue() {
+    return queue;
   }
 
   public ConnectionInfo getConnectionInfo() {
