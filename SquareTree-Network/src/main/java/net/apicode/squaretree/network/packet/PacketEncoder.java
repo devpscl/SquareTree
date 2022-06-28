@@ -7,7 +7,7 @@ import net.apicode.squaretree.network.codec.DataSerializer;
 import net.apicode.squaretree.network.codec.converter.NodeIdConverter;
 import net.apicode.squaretree.network.util.NodeId;
 
-public class PacketEncoder extends MessageToByteEncoder<Packet<?>> {
+public class PacketEncoder extends MessageToByteEncoder<Packet> {
 
   private final ProtocolManager protocolManager;
 
@@ -27,10 +27,8 @@ public class PacketEncoder extends MessageToByteEncoder<Packet<?>> {
    * */
 
   @Override
-  protected void encode(ChannelHandlerContext channelHandlerContext, Packet<?> packet, ByteBuf byteBuf)
+  protected void encode(ChannelHandlerContext channelHandlerContext, Packet packet, ByteBuf byteBuf)
       throws Exception {
-
-    DataSerializer mainSerializer = new DataSerializer(byteBuf);
 
     NodeIdConverter nodeIdConverter = new NodeIdConverter();
 
@@ -42,18 +40,24 @@ public class PacketEncoder extends MessageToByteEncoder<Packet<?>> {
 
     boolean hasResponse = packet.getResponse() != null && packet.getContainerType() == PacketType.RESPONSE;
 
-
-
     DataSerializer packetContainer = new DataSerializer();
     packetContainer.writeString(packetId); //0
     packetContainer.writeInt(packetType); //1
     packetContainer.writeInt(containerType); //2
     packetContainer.writeData(sender, nodeIdConverter); //3
     packetContainer.writeData(target, nodeIdConverter); //4
+
     packetContainer.writeContainer(packet); //5
     packetContainer.writeBoolean(hasResponse); //6
     packet.getResponse().serialize(packetContainer);
 
-    mainSerializer.writeContainer(packetContainer);
+
+
+    byte[] array = packetContainer.array();
+    byteBuf.writeInt(array.length);
+    byteBuf.writeBytes(array);
+
+
+
   }
 }

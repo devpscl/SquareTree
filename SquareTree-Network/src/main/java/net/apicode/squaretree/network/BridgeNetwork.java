@@ -12,6 +12,8 @@ import net.apicode.squaretree.network.packet.Packet;
 import net.apicode.squaretree.network.packet.PacketLink;
 import net.apicode.squaretree.network.packet.PacketQueue;
 import net.apicode.squaretree.network.packet.ProtocolManager;
+import net.apicode.squaretree.network.protocol.PacketNetworkPing;
+import net.apicode.squaretree.network.protocol.PacketNetworkRegister;
 import net.apicode.squaretree.network.util.ConnectionInfo;
 import net.apicode.squaretree.network.util.NodeId;
 import net.apicode.squaretree.network.util.PrioritizedList;
@@ -29,9 +31,12 @@ public abstract class BridgeNetwork implements ProtocolManager, PacketAdapter {
   private final PrioritizedList<NetworkHandler> networkHandlers = new PrioritizedList<>();
   private final PacketQueue queue = new PacketQueue();
 
-  public BridgeNetwork(@NotNull ConnectionInfo connectionInfo, @NotNull SecurityInfo securityInfo) {
+  public BridgeNetwork(@NotNull ConnectionInfo connectionInfo, @NotNull SecurityInfo securityInfo)
+      throws NetworkException {
     this.connectionInfo = connectionInfo;
     this.securityInfo = securityInfo;
+    registerPacket(PacketNetworkRegister.class);
+    registerPacket(PacketNetworkPing.class);
   }
 
   public abstract NetworkNode getNetworkNode();

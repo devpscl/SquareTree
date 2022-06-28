@@ -32,17 +32,23 @@ public class PacketDecoder extends ByteToMessageDecoder {
       throws Exception {
     NodeIdConverter nodeIdConverter = new NodeIdConverter();
 
-    DataDeserializer mainDeserializer = new DataDeserializer(byteBuf);
-    DataDeserializer deserializer = mainDeserializer.readContainer();
+    int size = byteBuf.readInt();
+    byte[] bytes = new byte[size];
+    byteBuf.readBytes(bytes);
+
+    DataDeserializer deserializer = new DataDeserializer(bytes);
 
     String packetId = deserializer.readString();
     int packetType = deserializer.readInt();
+    int containerTypeId = deserializer.readInt();
 
-    Packet<?> packet = protocolManager.createPacket(packetType);
+    Packet packet = protocolManager.createPacket(packetType);
 
-    PacketType containerType = PacketType.getType(packetType);
+    PacketType containerType = PacketType.getType(containerTypeId);
     NodeId sender = deserializer.readData(nodeIdConverter);
     NodeId target = deserializer.readData(nodeIdConverter);
+
+    packet.deserialize(deserializer.readContainer());
 
     packet.setContainerType(containerType);
     packet.setNodeInformation(sender, target);

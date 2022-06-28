@@ -44,6 +44,6 @@ public class NodeId {
 
   @Override
   public String toString() {
-    return name;
+    return name  + ":" + sessionId;
   }
 }

@@ -3,8 +3,10 @@ package net.apicode.squaretree.network.protocol;
 import net.apicode.squaretree.network.codec.DataDeserializer;
 import net.apicode.squaretree.network.codec.DataSerializer;
 import net.apicode.squaretree.network.packet.Packet;
+import net.apicode.squaretree.network.packet.PacketLink;
 import net.apicode.squaretree.network.packet.response.RegisterResponse;
 
+@PacketLink(type = 1001)
 public class PacketNetworkRegister extends Packet<RegisterResponse> {
 
   private String privateKey;

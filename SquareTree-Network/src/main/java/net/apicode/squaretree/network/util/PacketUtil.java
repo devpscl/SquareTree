@@ -23,13 +23,13 @@ public class PacketUtil {
     networkNode.sendRawPacket(packet);
   }
 
-  public static <T extends Response<T2>, T2> void createCallback(NetworkNode networkNode, Packet<T> packet,
+  public static <T extends Response<?>> void createCallback(NetworkNode networkNode, Packet<T> packet,
       Consumer<T> consumer) throws NetworkException {
     consumer.accept(packet.getResponse());
     createCallback(networkNode, packet);
   }
 
-  public static <T extends Response<T2>, T2> void createCallbackIfRequest(NetworkNode networkNode, Packet<T> packet,
+  public static <T extends Response<?>> void createCallbackIfRequest(NetworkNode networkNode, Packet<T> packet,
       Consumer<T> consumer) throws NetworkException {
     if(packet.getContainerType() != PacketType.REQUEST) return;
     consumer.accept(packet.getResponse());

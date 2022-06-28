@@ -6,8 +6,8 @@ import net.apicode.squaretree.network.handler.PacketReceiver;
 import net.apicode.squaretree.network.packet.Packet;
 import net.apicode.squaretree.network.packet.PacketType;
 import net.apicode.squaretree.network.packet.response.RegisterResponse.Result;
-import net.apicode.squaretree.network.packet.response.Response;
 import net.apicode.squaretree.network.packet.response.ResponseState;
+import net.apicode.squaretree.network.protocol.PacketNetworkPing;
 import net.apicode.squaretree.network.protocol.PacketNetworkRegister;
 import net.apicode.squaretree.network.util.PacketUtil;
 
@@ -22,6 +22,7 @@ public class NettyServerChannelHandler extends SimpleChannelInboundHandler<Packe
   @Override
   public void channelActive(ChannelHandlerContext ctx) {
     NetworkNode node = new NetworkNode(bridgeServer, ctx.channel(), null);
+    bridgeServer.getNodeMap().addNode(node);
     bridgeServer.foreachHandler(networkHandler -> {
       networkHandler.nodePreConnect(node);
     });
@@ -34,7 +35,9 @@ public class NettyServerChannelHandler extends SimpleChannelInboundHandler<Packe
       bridgeServer.foreachHandler(networkHandler -> {
         networkHandler.nodeClose(node);
       });
+      bridgeServer.getNodeMap().removeNode(node);
     }
+
   }
 
   @Override
@@ -78,11 +81,13 @@ public class NettyServerChannelHandler extends SimpleChannelInboundHandler<Packe
         }
       } else {
         if(packet.getContainerType() == PacketType.REQUEST) {
-          for (PacketReceiver<?> packetListener : bridgeServer.getPacketListeners(packetClass)) {
-            try {
-              packetListener.input(packet, node);
-            } catch (Throwable t) {
-              exceptionCaught(channelHandlerContext, t);
+          if(acceptPacket(packet, node)) {
+            for (PacketReceiver<?> packetListener : bridgeServer.getPacketListeners(packetClass)) {
+              try {
+                packetListener.input(packet, node);
+              } catch (Throwable t) {
+                exceptionCaught(channelHandlerContext, t);
+              }
             }
           }
           PacketUtil.createCallback(node, packet);
@@ -93,6 +98,14 @@ public class NettyServerChannelHandler extends SimpleChannelInboundHandler<Packe
     }
   }
 
+  private boolean acceptPacket(Packet<?> packet, NetworkNode networkNode) {
+    if(packet instanceof PacketNetworkPing) {
+      PacketNetworkPing pingPacket = (PacketNetworkPing) packet;
+      pingPacket.getResponse().setValue(System.currentTimeMillis()-pingPacket.getTimeAtSend());
+      return false;
+    }
+    return true;
+  }
 
   @Override
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {

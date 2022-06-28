@@ -2,6 +2,7 @@ package net.apicode.squaretree.network.util;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import net.apicode.squaretree.network.InvalidConnectionException;
 
 /**
@@ -48,6 +49,15 @@ public interface ConnectionInfo {
 
     private InetAddress address;
     private int port;
+
+    public Builder() {
+      try {
+        address = InetAddress.getLocalHost();
+        port = 22670;
+      } catch (UnknownHostException e) {
+        throw new InvalidConnectionException("Invalid localhost", e);
+      }
+    }
 
     public InetAddress getAddress() {
       return address;

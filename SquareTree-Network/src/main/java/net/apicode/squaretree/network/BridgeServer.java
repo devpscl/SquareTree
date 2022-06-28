@@ -12,6 +12,9 @@ import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import java.util.ArrayList;
+import java.util.List;
+import net.apicode.squaretree.network.handler.NetworkHandler;
 import net.apicode.squaretree.network.packet.Packet;
 import net.apicode.squaretree.network.packet.PacketDecoder;
 import net.apicode.squaretree.network.packet.PacketEncoder;
@@ -32,9 +35,17 @@ public class BridgeServer extends BridgeNetwork {
   private final NetworkNode networkNode;
   private final NodeMap nodeMap = new NodeMap();
 
+
+  public BridgeServer(@NotNull ConnectionInfo connectionInfo) throws NetworkException {
+    this(connectionInfo, SecurityInfo.DEFAULT);
+  }
+
   public BridgeServer(@NotNull ConnectionInfo connectionInfo,
-      @NotNull SecurityInfo securityInfo) throws NetworkException {
+      @NotNull SecurityInfo securityInfo, NetworkHandler...handlers) throws NetworkException {
     super(connectionInfo, securityInfo);
+    for (NetworkHandler handler : handlers) {
+      addHandler(handler);
+    }
     ServerBootstrap bootstrap = new ServerBootstrap();
     bootstrap.group(bossGroup, workerGroup)
         .channel(epoll ? EpollServerSocketChannel.class : NioServerSocketChannel.class)
@@ -51,6 +62,9 @@ public class BridgeServer extends BridgeNetwork {
     try {
       this.channelFuture = bootstrap.bind(connectionInfo.getAddress(), connectionInfo.getPort()).sync();
       networkNode = new NetworkNode(this, channelFuture.channel(), NodeId.SERVER);
+      foreachHandler(networkHandler -> {
+        networkHandler.networkOpen(this);
+      });
     } catch (InterruptedException e) {
       throw new NetworkException(e);
     }
@@ -90,6 +104,9 @@ public class BridgeServer extends BridgeNetwork {
 
   public void close() {
     channelFuture.channel().close();
+    foreachHandler(networkHandler -> {
+      networkHandler.networkClose(this);
+    });
   }
 
   @Override
@@ -110,6 +127,6 @@ public class BridgeServer extends BridgeNetwork {
 
   @Override
   public void sendPacket(Packet<?> packet, Channel channel) {
-    channel.writeAndFlush(channel);
+    channel.writeAndFlush(packet);
   }
 }

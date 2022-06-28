@@ -16,6 +16,7 @@ public class NetworkNode {
     this.bridgeNetwork = bridgeNetwork;
     this.channel = channel;
     this.server = (bridgeNetwork instanceof BridgeServer) && id != null;
+    this.id = id;
   }
 
   public boolean isRegistered() {
@@ -27,16 +28,21 @@ public class NetworkNode {
       throw new NetworkException("Node is already registered");
     }
     this.id = nodeId;
+    bridgeNetwork.foreachHandler(networkHandler -> networkHandler.nodeConnect(this));
+    if(server) {
+      BridgeServer bridgeServer = (BridgeServer) bridgeNetwork;
+      bridgeServer.getNodeMap().registerNode(this);
+    }
   }
 
 
-  public <T extends Response<VT>, VT> T sendPacket(Packet<T> packet) throws NetworkException {
+  public <T extends Response<?>> T sendPacket(Packet<T> packet) throws NetworkException {
     if(server) {
       return bridgeNetwork.sendPacket(packet, id);
     }
     return sendPacket(packet);
   }
-  public <T extends Response<VT>, VT> T sendPacket(Packet<T> packet, NodeId nodeId) throws NetworkException {
+  public <T extends Response<?>> T sendPacket(Packet<T> packet, NodeId nodeId) throws NetworkException {
     if(server) {
       return sendPacket(packet);
     }
