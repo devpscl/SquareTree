@@ -4,10 +4,10 @@ import net.apicode.squaretree.network.codec.DataDeserializer;
 import net.apicode.squaretree.network.codec.DataSerializer;
 import net.apicode.squaretree.network.packet.Packet;
 import net.apicode.squaretree.network.packet.PacketLink;
-import net.apicode.squaretree.network.packet.response.LongResponse;
+import net.apicode.squaretree.network.packet.response.PingResponse;
 
 @PacketLink(type = 1000)
-public class PacketNetworkPing extends Packet<LongResponse> {
+public class PacketNetworkPing extends Packet<PingResponse> {
 
   private long timeAtSend = 0L;
 
@@ -26,7 +26,7 @@ public class PacketNetworkPing extends Packet<LongResponse> {
   }
 
   @Override
-  public LongResponse getDefaultResponse() {
-    return new LongResponse(0L);
+  public PingResponse getDefaultResponse() {
+    return new PingResponse();
   }
 }

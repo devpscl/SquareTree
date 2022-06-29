@@ -5,6 +5,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import net.apicode.squaretree.network.handler.PacketReceiver;
 import net.apicode.squaretree.network.packet.Packet;
 import net.apicode.squaretree.network.packet.PacketType;
+import net.apicode.squaretree.network.protocol.PacketNetworkPing;
+import net.apicode.squaretree.network.util.AsyncTask;
 import net.apicode.squaretree.network.util.PacketUtil;
 
 public class NettySocketChannelHandler extends SimpleChannelInboundHandler<Packet<?>> {
@@ -20,21 +22,39 @@ public class NettySocketChannelHandler extends SimpleChannelInboundHandler<Packe
     NetworkNode node = socket.getNetworkNode();
     Class<? extends Packet<?>> packetClass = (Class<? extends Packet<?>>) packet.getClass();
     if(packet.getContainerType() == PacketType.REQUEST) {
-      for (PacketReceiver<?> packetListener : socket.getPacketListeners(packetClass)) {
-        try {
-          packetListener.input(packet, node);
-        } catch (Throwable t) {
-          exceptionCaught(channelHandlerContext, t);
+      AsyncTask.create(() -> {
+        if(acceptPacket(packet, node)) {
+          for (PacketReceiver<?> packetListener : socket.getPacketListeners(packetClass)) {
+            try {
+              packetListener.input(packet, node);
+            } catch (Throwable t) {
+              exceptionCaught(channelHandlerContext, t);
+            }
+          }
         }
-      }
-      PacketUtil.createCallback(node, packet);
+        try {
+          PacketUtil.createCallback(node, packet);
+        } catch (NetworkException e) {
+          throw new RuntimeException(e);
+        }
+      });
+
     } else if(packet.getContainerType() == PacketType.RESPONSE) {
       socket.getWaitingQueue().forwardPacket(packet);
     }
   }
 
+  private boolean acceptPacket(Packet<?> packet, NetworkNode networkNode) {
+    if(packet instanceof PacketNetworkPing) {
+      PacketNetworkPing pingPacket = (PacketNetworkPing) packet;
+      pingPacket.getResponse().setValue(pingPacket.getTimeAtSend());
+      return false;
+    }
+    return true;
+  }
+
   @Override
-  public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+  public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
     socket.foreachHandler(networkHandler -> {
       networkHandler.throwException(socket.getNetworkNode(), cause);
     });

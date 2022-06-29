@@ -11,7 +11,6 @@ import net.apicode.squaretree.network.util.NodeId;
 public class NodeMap {
 
   private final HashMap<NodeId, NetworkNode> networkNodeHashMap = new HashMap<>();
-  private final HashMap<String, NodeId> nodeIdHashMap = new HashMap<>();
   private final HashMap<Channel, NetworkNode> channelNetworkNodeHashMap = new HashMap<>();
   private final List<NetworkNode> nodes = new ArrayList<>();
 
@@ -22,13 +21,10 @@ public class NodeMap {
 
   public void registerNode(NetworkNode networkNode) {
     if(networkNode == null) throw new IllegalStateException("NodeId is not defined");
-    String name = networkNode.getId().getName();
-    nodeIdHashMap.put(name, networkNode.getId());
     networkNodeHashMap.put(networkNode.getId(), networkNode);
   }
 
   public void removeNodeId(NodeId nodeId) {
-    nodeIdHashMap.remove(nodeId.getName());
     networkNodeHashMap.remove(nodeId);
   }
 
@@ -50,13 +46,6 @@ public class NodeMap {
   public NetworkNode getNode(Channel nodeId) {
     if(channelNetworkNodeHashMap.containsKey(nodeId)) {
       return channelNetworkNodeHashMap.get(nodeId);
-    }
-    return null;
-  }
-
-  public NodeId getNodeIdByName(String name) {
-    if(nodeIdHashMap.containsKey(name)) {
-      return nodeIdHashMap.get(name);
     }
     return null;
   }

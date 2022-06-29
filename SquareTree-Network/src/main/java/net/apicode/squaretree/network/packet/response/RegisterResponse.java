@@ -45,7 +45,7 @@ public class RegisterResponse implements Response<Result> {
 
     SUCCESSFUL(0x0),
     INVALID_PRIVATE_KEY(0x1),
-    NODE_NAME_ALREADY_LOADED(0x2),
+    NODE_ALREADY_LOADED(0x2),
     ERROR(0x3);
 
     private final int value;

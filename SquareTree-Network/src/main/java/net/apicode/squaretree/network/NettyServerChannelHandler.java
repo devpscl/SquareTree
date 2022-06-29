@@ -9,6 +9,7 @@ import net.apicode.squaretree.network.packet.response.RegisterResponse.Result;
 import net.apicode.squaretree.network.packet.response.ResponseState;
 import net.apicode.squaretree.network.protocol.PacketNetworkPing;
 import net.apicode.squaretree.network.protocol.PacketNetworkRegister;
+import net.apicode.squaretree.network.util.AsyncTask;
 import net.apicode.squaretree.network.util.PacketUtil;
 
 public class NettyServerChannelHandler extends SimpleChannelInboundHandler<Packet<?>> {
@@ -37,11 +38,11 @@ public class NettyServerChannelHandler extends SimpleChannelInboundHandler<Packe
       });
       bridgeServer.getNodeMap().removeNode(node);
     }
-
   }
 
   @Override
   protected void channelRead0(ChannelHandlerContext channelHandlerContext, Packet<?> packet) throws Exception {
+
     NetworkNode node = bridgeServer.getNode(channelHandlerContext.channel());
     if(node != null) {
       if(!node.isRegistered()) {
@@ -53,44 +54,52 @@ public class NettyServerChannelHandler extends SimpleChannelInboundHandler<Packe
               response.setState(ResponseState.ERROR);
               response.setValue(Result.INVALID_PRIVATE_KEY);
             });
-          } else if(bridgeServer.getNodeId(packetNetworkRegister.getSenderNode().getName()) != null) {
+          } else if(bridgeServer.getNode(packet.getSenderNode()) != null) {
             PacketUtil.createCallback(node, packetNetworkRegister, response -> {
               response.setState(ResponseState.ERROR);
-              response.setValue(Result.NODE_NAME_ALREADY_LOADED);
+              response.setValue(Result.NODE_ALREADY_LOADED);
             });
           } else {
+            node.register(packet.getSenderNode());
+            bridgeServer.getNodeMap().registerNode(node);
             PacketUtil.createCallback(node, packetNetworkRegister, response -> {
               response.setState(ResponseState.SUCCESSFUL);
               response.setValue(Result.SUCCESSFUL);
             });
-            node.register(packet.getSenderNode());
+            AsyncTask.create(() -> bridgeServer.foreachHandler(networkHandler -> networkHandler.nodeConnect(node)));
           }
         }
         return;
       }
       Class<? extends Packet<?>> packetClass = (Class<? extends Packet<?>>) packet.getClass();
 
-      if(!packet.getTargetNode().getName().equals(bridgeServer.getNetworkNode().getId().getName())) {
-        NetworkNode targetNode = bridgeServer.getNode(bridgeServer.getNodeId(packet.getTargetNode().getName()));
+      if(!packet.getTargetNode().equals(bridgeServer.getNetworkNode().getId())) {
+        NetworkNode targetNode = bridgeServer.getNode(packet.getTargetNode());
         if(targetNode == null) {
           PacketUtil.createCallback(node, packet, response -> {
             response.setState(ResponseState.TOTAL_ERROR);
           });
         } else {
-          targetNode.sendPacket(packet);
+          bridgeServer.sendPacket(packet, targetNode.getChannel());
         }
       } else {
         if(packet.getContainerType() == PacketType.REQUEST) {
-          if(acceptPacket(packet, node)) {
-            for (PacketReceiver<?> packetListener : bridgeServer.getPacketListeners(packetClass)) {
-              try {
-                packetListener.input(packet, node);
-              } catch (Throwable t) {
-                exceptionCaught(channelHandlerContext, t);
+          AsyncTask.create(() -> {
+            if(acceptPacket(packet, node)) {
+              for (PacketReceiver<?> packetListener : bridgeServer.getPacketListeners(packetClass)) {
+                try {
+                  packetListener.input(packet, node);
+                } catch (Throwable t) {
+                  exceptionCaught(channelHandlerContext, t);
+                }
               }
             }
-          }
-          PacketUtil.createCallback(node, packet);
+            try {
+              PacketUtil.createCallback(node, packet);
+            } catch (NetworkException e) {
+              throw new RuntimeException(e);
+            }
+          });
         } else if(packet.getContainerType() == PacketType.RESPONSE) {
           bridgeServer.getWaitingQueue().forwardPacket(packet);
         }
@@ -101,14 +110,14 @@ public class NettyServerChannelHandler extends SimpleChannelInboundHandler<Packe
   private boolean acceptPacket(Packet<?> packet, NetworkNode networkNode) {
     if(packet instanceof PacketNetworkPing) {
       PacketNetworkPing pingPacket = (PacketNetworkPing) packet;
-      pingPacket.getResponse().setValue(System.currentTimeMillis()-pingPacket.getTimeAtSend());
+      pingPacket.getResponse().setValue(pingPacket.getTimeAtSend());
       return false;
     }
     return true;
   }
 
   @Override
-  public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+  public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
     NetworkNode node = bridgeServer.getNode(ctx.channel());
     bridgeServer.foreachHandler(networkHandler -> {
       networkHandler.throwException(node, cause);

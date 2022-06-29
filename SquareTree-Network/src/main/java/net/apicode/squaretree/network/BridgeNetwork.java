@@ -5,7 +5,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.function.Consumer;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import net.apicode.squaretree.network.handler.NetworkHandler;
 import net.apicode.squaretree.network.handler.PacketReceiver;
 import net.apicode.squaretree.network.packet.Packet;
@@ -15,12 +16,15 @@ import net.apicode.squaretree.network.packet.ProtocolManager;
 import net.apicode.squaretree.network.protocol.PacketNetworkPing;
 import net.apicode.squaretree.network.protocol.PacketNetworkRegister;
 import net.apicode.squaretree.network.util.ConnectionInfo;
-import net.apicode.squaretree.network.util.NodeId;
 import net.apicode.squaretree.network.util.PrioritizedList;
 import net.apicode.squaretree.network.util.SecurityInfo;
 import net.apicode.squaretree.network.util.function.DoubleConsumer;
+import net.apicode.squaretree.network.util.function.ExceptionConsumer;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * The type Bridge network.
+ */
 public abstract class BridgeNetwork implements ProtocolManager, PacketAdapter {
 
   private final HashMap<Integer, Class<? extends Packet>> packets = new HashMap<>();
@@ -31,6 +35,13 @@ public abstract class BridgeNetwork implements ProtocolManager, PacketAdapter {
   private final PrioritizedList<NetworkHandler> networkHandlers = new PrioritizedList<>();
   private final PacketQueue queue = new PacketQueue();
 
+  /**
+   * Instantiates a new Bridge network.
+   *
+   * @param connectionInfo the connection info
+   * @param securityInfo   the security info
+   * @throws NetworkException the network exception
+   */
   public BridgeNetwork(@NotNull ConnectionInfo connectionInfo, @NotNull SecurityInfo securityInfo)
       throws NetworkException {
     this.connectionInfo = connectionInfo;
@@ -39,6 +50,11 @@ public abstract class BridgeNetwork implements ProtocolManager, PacketAdapter {
     registerPacket(PacketNetworkPing.class);
   }
 
+  /**
+   * Gets network node of this instance.
+   *
+   * @return the network node
+   */
   public abstract NetworkNode getNetworkNode();
 
   @Override
@@ -69,15 +85,30 @@ public abstract class BridgeNetwork implements ProtocolManager, PacketAdapter {
     return new UnmodifiableListSet<>(new ArrayList<>());
   }
 
+  /**
+   * Add network handler listener.
+   *
+   * @param networkHandler the network handler
+   */
   public void addHandler(@NotNull NetworkHandler networkHandler) {
     networkHandlers.add(networkHandler);
   }
 
+  /**
+   * Remove network handler listener.
+   *
+   * @param networkHandler the network handler
+   */
   public void removeHandler(@NotNull NetworkHandler networkHandler) {
     networkHandlers.remove(networkHandler);
   }
 
-  public void foreachHandler(@NotNull Consumer<NetworkHandler> handlerConsumer) {
+  /**
+   * Execute foreach network handlers.
+   *
+   * @param handlerConsumer the handler consumer
+   */
+  public void foreachHandler(@NotNull ExceptionConsumer<NetworkHandler> handlerConsumer) {
     for (NetworkHandler networkHandler : networkHandlers) {
       try {
         handlerConsumer.accept(networkHandler);
@@ -87,6 +118,11 @@ public abstract class BridgeNetwork implements ProtocolManager, PacketAdapter {
     }
   }
 
+  /**
+   * Gets all registered network handlers.
+   *
+   * @return the handlers as unmodifiable collection
+   */
   public @NotNull  Collection<NetworkHandler> getHandlers() {
     return Collections.unmodifiableCollection(networkHandlers);
   }
@@ -166,6 +202,11 @@ public abstract class BridgeNetwork implements ProtocolManager, PacketAdapter {
     return queue;
   }
 
+  /**
+   * Gets connection info.
+   *
+   * @return the connection info
+   */
   public ConnectionInfo getConnectionInfo() {
     return connectionInfo;
   }

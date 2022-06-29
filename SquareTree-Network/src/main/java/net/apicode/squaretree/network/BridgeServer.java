@@ -12,18 +12,28 @@ import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import net.apicode.squaretree.network.handler.NetworkHandler;
 import net.apicode.squaretree.network.packet.Packet;
 import net.apicode.squaretree.network.packet.PacketDecoder;
 import net.apicode.squaretree.network.packet.PacketEncoder;
+import net.apicode.squaretree.network.packet.response.PingResponse;
+import net.apicode.squaretree.network.packet.response.Response;
+import net.apicode.squaretree.network.protocol.PacketNetworkPing;
+import net.apicode.squaretree.network.util.AsyncTask;
 import net.apicode.squaretree.network.util.ConnectionInfo;
 import net.apicode.squaretree.network.util.NodeId;
 import net.apicode.squaretree.network.util.SecurityInfo;
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+/**
+ * The type Bridge server.
+ * Create a new bridge server
+ */
 public class BridgeServer extends BridgeNetwork {
 
   private static final boolean epoll = Epoll.isAvailable();
@@ -35,11 +45,28 @@ public class BridgeServer extends BridgeNetwork {
   private final NetworkNode networkNode;
   private final NodeMap nodeMap = new NodeMap();
 
-
+  /**
+   * Instantiates a new Bridge server.
+   *
+   * This constructer will be start the server
+   *
+   * @param connectionInfo the connection info
+   * @throws NetworkException the network exception
+   */
   public BridgeServer(@NotNull ConnectionInfo connectionInfo) throws NetworkException {
     this(connectionInfo, SecurityInfo.DEFAULT);
   }
 
+  /**
+   * Instantiates a new Bridge server.
+   *
+   * This constructer will start the server.
+   *
+   * @param connectionInfo the connection info
+   * @param securityInfo   the security info
+   * @param handlers       the handlers to register before start server
+   * @throws NetworkException the network exception
+   */
   public BridgeServer(@NotNull ConnectionInfo connectionInfo,
       @NotNull SecurityInfo securityInfo, NetworkHandler...handlers) throws NetworkException {
     super(connectionInfo, securityInfo);
@@ -70,27 +97,50 @@ public class BridgeServer extends BridgeNetwork {
     }
   }
 
+  /**
+   * Gets network node of channel.
+   * If node doesn't exists return null
+   *
+   * @param channel the channel
+   * @return the node
+   */
+  @Nullable
   public NetworkNode getNode(Channel channel) {
     return getNodeMap().getNode(channel);
   }
 
+  /**
+   * Gets network node of node id.
+   * If node doesn't exists return null
+   *
+   * @param nodeId the node id
+   * @return the node
+   */
+  @Nullable
   public NetworkNode getNode(NodeId nodeId) {
     return getNodeMap().getNode(nodeId);
   }
 
-  public NodeId getNodeId(String name) {
-    return getNodeMap().getNodeIdByName(name);
-  }
-
+  /**
+   * Gets node map.
+   * Method is internal
+   * @return the node map
+   */
   @Internal
   protected NodeMap getNodeMap() {
     return nodeMap;
   }
 
+  @NotNull
   public NetworkNode getNetworkNode() {
     return networkNode;
   }
 
+  /**
+   * Waiting of server and automatic close of service groups
+   *
+   * @throws NetworkException the network exception
+   */
   public void schedule() throws NetworkException {
     try {
       channelFuture.channel().closeFuture().sync();
@@ -102,6 +152,35 @@ public class BridgeServer extends BridgeNetwork {
     }
   }
 
+  /**
+   * Waiting of server async and automatic close of service groups
+   *
+   */
+  public Future<?> scheduleAsync() {
+    return AsyncTask.create(() -> {
+      try {
+        schedule();
+      } catch (NetworkException e) {
+        throw new RuntimeException(e);
+      }
+    });
+  }
+
+  /**
+   * Check ping of sending and receiving packet to bridge socket
+   *
+   * @return the ping as long
+   * @throws NetworkException the network exception
+   */
+  public long ping(@NotNull NodeId node) throws NetworkException {
+    PacketNetworkPing packet = new PacketNetworkPing();
+    PingResponse pingResponse = sendPacket(packet, node);
+    return pingResponse.getValue();
+  }
+
+  /**
+   * Close server connection
+   */
   public void close() {
     channelFuture.channel().close();
     foreachHandler(networkHandler -> {
@@ -109,13 +188,27 @@ public class BridgeServer extends BridgeNetwork {
     });
   }
 
+  /**
+   * <p style="color:red">It will be not supported for server</p>
+   */
   @Override
-  public <T> T sendPacket(Packet<?> packet) {
+  @Internal
+  @Deprecated
+  public <T extends Response<?>> T sendPacket(Packet<T> packet) {
     throw new UnsupportedOperationException("You must be have a target");
   }
 
+  /**
+   * Send packet to specific target.
+   * If target no exists will be return a error response
+   *
+   * @param <T>    the response type
+   * @param packet the packet
+   * @return the response of packet
+   */
   @Override
-  public <T> T sendPacket(Packet<?> packet, NodeId target) throws NetworkException {
+  public <T extends Response<?>> T sendPacket(@NotNull Packet<T> packet, @NotNull  NodeId target)
+      throws NetworkException {
     packet.setNodeInformation(networkNode.getId(), target);
     NetworkNode node = nodeMap.getNode(target);
     String packetId = packet.getPacketId();
@@ -125,8 +218,27 @@ public class BridgeServer extends BridgeNetwork {
     return (T) resultPacket.getResponse();
   }
 
+  /**
+   * Send packet asynchronous to specific target.
+   * If target no exists will be return error response
+   *
+   * @param <T>    the response type
+   * @param packet the packet
+   * @return the future of response packet
+   */
+  public <T extends Response<?>> Future<T> sendPacketAsync(@NotNull Packet<T> packet, @NotNull  NodeId target) {
+    return AsyncTask.create(() -> sendPacket(packet, target));
+  }
+
+  /**
+   * Send packet to channel without standard packet setup
+   * The packet must have sender and target
+   *
+   * @param packet the packet
+   * @param channel the target channel
+   */
   @Override
-  public void sendPacket(Packet<?> packet, Channel channel) {
+  public void sendPacket(@NotNull Packet<?> packet, @NotNull Channel channel) {
     channel.writeAndFlush(packet);
   }
 }

@@ -5,34 +5,37 @@ import net.apicode.squaretree.network.codec.DataSerializer;
 
 public class PingResponse implements Response<Long> {
 
+  private long value = 0L;
+  private ResponseState responseState = ResponseState.TOTAL_ERROR;
 
-  @Override
-  public void serialize(DataSerializer serializer) {
-
+  public ResponseState getState() {
+    return responseState;
   }
 
   @Override
-  public void deserialize(DataDeserializer deserializer) {
-
+  public void setState(ResponseState responseState) {
+    this.responseState = responseState;
   }
 
   @Override
   public Long getValue() {
-    return null;
-  }
-
-  @Override
-  public ResponseState getState() {
-    return null;
-  }
-
-  @Override
-  public void setState(ResponseState state) {
-
+    return value;
   }
 
   @Override
   public void setValue(Long value) {
+    this.value = value;
+  }
 
+  @Override
+  public void serialize(DataSerializer serializer) {
+    serializer.writeLong(value);
+    serializer.writeInt(responseState.getState());
+  }
+
+  @Override
+  public void deserialize(DataDeserializer deserializer) {
+    value = System.currentTimeMillis()-deserializer.readLong();
+    responseState = ResponseState.getState(deserializer.readInt());
   }
 }

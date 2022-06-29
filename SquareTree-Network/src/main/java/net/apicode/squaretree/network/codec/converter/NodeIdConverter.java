@@ -9,15 +9,15 @@ public class NodeIdConverter implements DataConverter<NodeId> {
   @Override
   public DataSerializer serialize(NodeId value) throws Exception {
     DataSerializer dataSerializer = new DataSerializer(128);
-    dataSerializer.writeString(value.getSessionId());
+    dataSerializer.writeString(value.getSubName());
     dataSerializer.writeString(value.getName());
     return dataSerializer;
   }
 
   @Override
   public NodeId deserialize(DataDeserializer deserializer) throws Exception {
-    String sessionId = deserializer.readString();
-    String signature = deserializer.readString();
-    return new NodeId(sessionId, signature);
+    String subName = deserializer.readString();
+    String name = deserializer.readString();
+    return new NodeId(name, subName);
   }
 }
