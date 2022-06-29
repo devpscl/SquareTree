@@ -43,6 +43,15 @@ public interface ConnectionInfo {
   }
 
   /**
+   * Convert to string
+   *
+   * @return the formatted string
+   */
+  default String getNaming() {
+    return getAddressAsString() + ":" + getPort();
+  }
+
+  /**
    * The type Builder.
    */
   class Builder implements ConnectionInfo {
