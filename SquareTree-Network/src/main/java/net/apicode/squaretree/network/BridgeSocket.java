@@ -12,8 +12,6 @@ import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import net.apicode.squaretree.network.handler.NetworkHandler;
 import net.apicode.squaretree.network.packet.Packet;
@@ -81,8 +79,8 @@ public class BridgeSocket extends BridgeNetwork {
           @Override
           protected void initChannel(SocketChannel socketChannel) throws Exception {
             ChannelPipeline pipeline = socketChannel.pipeline();
-            pipeline.addLast(new PacketDecoder(BridgeSocket.this));
-            pipeline.addLast(new PacketEncoder(BridgeSocket.this));
+            pipeline.addLast(new PacketDecoder(BridgeSocket.this, securityInfo));
+            pipeline.addLast(new PacketEncoder(BridgeSocket.this, securityInfo));
 
             pipeline.addLast(new NettySocketChannelHandler(BridgeSocket.this));
           }

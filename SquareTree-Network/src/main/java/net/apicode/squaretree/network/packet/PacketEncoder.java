@@ -5,14 +5,18 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import net.apicode.squaretree.network.codec.DataSerializer;
 import net.apicode.squaretree.network.codec.converter.NodeIdConverter;
+import net.apicode.squaretree.network.util.ByteArrayEncryption;
 import net.apicode.squaretree.network.util.NodeId;
+import net.apicode.squaretree.network.util.SecurityInfo;
 
 public class PacketEncoder extends MessageToByteEncoder<Packet> {
 
   private final ProtocolManager protocolManager;
+  private final SecurityInfo securityInfo;
 
-  public PacketEncoder(ProtocolManager protocolManager) {
+  public PacketEncoder(ProtocolManager protocolManager, SecurityInfo securityInfo) {
     this.protocolManager = protocolManager;
+    this.securityInfo = securityInfo;
   }
 
   /*
@@ -50,10 +54,13 @@ public class PacketEncoder extends MessageToByteEncoder<Packet> {
     packetContainer.writeContainer(packet); //5
     packetContainer.writeBoolean(hasResponse); //6
     packet.getResponse().serialize(packetContainer);
-
-
-
-    byte[] array = packetContainer.array();
+    
+    byte[] array;
+    if(securityInfo.isCryptoModeAvailable()) {
+      array = ByteArrayEncryption.xor(packetContainer.array(), securityInfo.getCryptoKey());
+    } else {
+      array = packetContainer.array();
+    }
     byteBuf.writeInt(array.length);
     byteBuf.writeBytes(array);
 

@@ -6,14 +6,18 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 import java.util.List;
 import net.apicode.squaretree.network.codec.DataDeserializer;
 import net.apicode.squaretree.network.codec.converter.NodeIdConverter;
+import net.apicode.squaretree.network.util.ByteArrayEncryption;
 import net.apicode.squaretree.network.util.NodeId;
+import net.apicode.squaretree.network.util.SecurityInfo;
 
 public class PacketDecoder extends ByteToMessageDecoder {
 
   private final ProtocolManager protocolManager;
+  private final SecurityInfo securityInfo;
 
-  public PacketDecoder(ProtocolManager protocolManager) {
+  public PacketDecoder(ProtocolManager protocolManager, SecurityInfo securityInfo) {
     this.protocolManager = protocolManager;
+    this.securityInfo = securityInfo;
   }
 
   /*
@@ -35,6 +39,10 @@ public class PacketDecoder extends ByteToMessageDecoder {
     int size = byteBuf.readInt();
     byte[] bytes = new byte[size];
     byteBuf.readBytes(bytes);
+
+    if(securityInfo.isCryptoModeAvailable()) {
+      bytes = ByteArrayEncryption.xor(bytes, securityInfo.getCryptoKey());
+    }
 
     DataDeserializer deserializer = new DataDeserializer(bytes);
 

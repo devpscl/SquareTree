@@ -14,6 +14,8 @@ public class NodeMap {
   private final HashMap<Channel, NetworkNode> channelNetworkNodeHashMap = new HashMap<>();
   private final List<NetworkNode> nodes = new ArrayList<>();
 
+
+
   public void addNode(NetworkNode networkNode) {
     channelNetworkNodeHashMap.put(networkNode.getChannel(), networkNode);
     nodes.add(networkNode);
@@ -48,6 +50,10 @@ public class NodeMap {
       return channelNetworkNodeHashMap.get(nodeId);
     }
     return null;
+  }
+
+  public Collection<NodeId> getNodeIds() {
+    return Collections.unmodifiableCollection(networkNodeHashMap.keySet());
   }
 
   public Collection<NetworkNode> getNodes() {

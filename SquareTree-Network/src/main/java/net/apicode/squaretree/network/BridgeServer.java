@@ -12,6 +12,7 @@ import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import java.util.Collection;
 import java.util.concurrent.Future;
 import net.apicode.squaretree.network.handler.NetworkHandler;
 import net.apicode.squaretree.network.packet.Packet;
@@ -39,8 +40,10 @@ public class BridgeServer extends BridgeNetwork {
   private final EventLoopGroup bossGroup = epoll ? new EpollEventLoopGroup() : new NioEventLoopGroup();
   private final EventLoopGroup workerGroup = epoll ? new EpollEventLoopGroup() : new NioEventLoopGroup();
 
-  private final ChannelFuture channelFuture;
-  private final NetworkNode networkNode;
+  private final ServerBootstrap bootstrap;
+
+  private ChannelFuture channelFuture;
+  private NetworkNode networkNode;
   private final NodeMap nodeMap = new NodeMap();
 
   /**
@@ -56,9 +59,7 @@ public class BridgeServer extends BridgeNetwork {
   }
 
   /**
-   * Instantiates a new Bridge server.
-   *
-   * This constructer will start the server.
+   * Instantiates a new Bridge server
    *
    * @param connectionInfo the connection info
    * @param securityInfo   the security info
@@ -71,21 +72,28 @@ public class BridgeServer extends BridgeNetwork {
     for (NetworkHandler handler : handlers) {
       addHandler(handler);
     }
-    ServerBootstrap bootstrap = new ServerBootstrap();
+    bootstrap = new ServerBootstrap();
     bootstrap.group(bossGroup, workerGroup)
         .channel(epoll ? EpollServerSocketChannel.class : NioServerSocketChannel.class)
         .childHandler(new ChannelInitializer<SocketChannel>() {
           @Override
           protected void initChannel(SocketChannel socketChannel) {
             ChannelPipeline pipeline = socketChannel.pipeline();
-            pipeline.addLast(new PacketDecoder(BridgeServer.this));
-            pipeline.addLast(new PacketEncoder(BridgeServer.this));
+            pipeline.addLast(new PacketDecoder(BridgeServer.this, securityInfo));
+            pipeline.addLast(new PacketEncoder(BridgeServer.this, securityInfo));
 
             pipeline.addLast(new NettyServerChannelHandler(BridgeServer.this));
           }
         });
+
+  }
+
+  /**
+   * Start the server
+   */
+  public void start() throws NetworkException {
     try {
-      this.channelFuture = bootstrap.bind(connectionInfo.getAddress(), connectionInfo.getPort()).sync();
+      this.channelFuture = bootstrap.bind(getConnectionInfo().getAddress(), getConnectionInfo().getPort()).sync();
       networkNode = new NetworkNode(this, channelFuture.channel(), NodeId.SERVER);
       foreachHandler(networkHandler -> {
         networkHandler.networkOpen(this);
@@ -184,6 +192,13 @@ public class BridgeServer extends BridgeNetwork {
     foreachHandler(networkHandler -> {
       networkHandler.networkClose(this);
     });
+  }
+
+  /**
+   * @return collection of node ids
+   */
+  public Collection<NodeId> getNodeIds() {
+    return getNodeMap().getNodeIds();
   }
 
   /**
