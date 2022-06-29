@@ -7,9 +7,15 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="SquareTree-Network" />
-        <module name="SquareTree-Server" />
+        <module name="squaretree-network" />
         <module name="SquareTree-Connector" />
+        <module name="squaretree-server" />
+        <module name="SquareTree-Server" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="SquareTree-Network" target="1.8" />
+      <module name="SquareTree-Server" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
 </project>

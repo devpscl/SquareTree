@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/SquareTree.iml" filepath="$PROJECT_DIR$/SquareTree.iml" />
+      <module fileurl="file://$PROJECT_DIR$/SquareTree-Network.iml" filepath="$PROJECT_DIR$/SquareTree-Network.iml" />
+      <module fileurl="file://$PROJECT_DIR$/SquareTree-Server.iml" filepath="$PROJECT_DIR$/SquareTree-Server.iml" />
     </modules>
   </component>
 </project>
