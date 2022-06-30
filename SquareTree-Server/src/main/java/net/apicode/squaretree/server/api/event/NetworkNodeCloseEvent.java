@@ -9,4 +9,8 @@ public class NetworkNodeCloseEvent extends Event {
   public NetworkNodeCloseEvent(NodeId nodeId) {
     this.nodeId = nodeId;
   }
+
+  public NodeId getNodeId() {
+    return nodeId;
+  }
 }

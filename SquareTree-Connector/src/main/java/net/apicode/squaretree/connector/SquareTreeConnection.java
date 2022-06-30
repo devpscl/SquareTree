@@ -63,7 +63,7 @@ public class SquareTreeConnection {
    * @return the response of packet
    * @throws NetworkException the network exception
    */
-  <T extends Response<?>> T sendPacket(Packet<T> packet) throws NetworkException {
+  public <T extends Response<?>> T sendPacket(Packet<T> packet) throws NetworkException {
     return socket.sendPacket(packet);
   }
 
@@ -76,7 +76,7 @@ public class SquareTreeConnection {
    * @return the response of packet
    * @throws NetworkException the network exception
    */
-  <T extends Response<?>> T sendPacket(Packet<T> packet, NodeId nodeId) throws NetworkException {
+  public <T extends Response<?>> T sendPacket(Packet<T> packet, NodeId nodeId) throws NetworkException {
     return socket.sendPacket(packet, nodeId);
   }
 
@@ -88,7 +88,7 @@ public class SquareTreeConnection {
    * @return the future of response packet
    * @throws NetworkException the network exception
    */
-  <T extends Response<?>> Future<T> sendPacketAsync(Packet<T> packet) throws NetworkException {
+  public <T extends Response<?>> Future<T> sendPacketAsync(Packet<T> packet) throws NetworkException {
     return socket.sendPacketAsync(packet);
   }
 
@@ -101,7 +101,7 @@ public class SquareTreeConnection {
    * @return the future of response packet
    * @throws NetworkException the network exception
    */
-  <T extends Response<?>> Future<T> sendPacketAsync(Packet<T> packet, NodeId nodeId) throws NetworkException {
+  public <T extends Response<?>> Future<T> sendPacketAsync(Packet<T> packet, NodeId nodeId) throws NetworkException {
     return socket.sendPacketAsync(packet, nodeId);
   }
 
@@ -111,7 +111,7 @@ public class SquareTreeConnection {
    * @param <T>      the type parameter
    * @param receiver the receiver
    */
-  <T extends Packet<?>> void addPacketListener(PacketReceiver<T> receiver) {
+  public <T extends Packet<?>> void addPacketListener(PacketReceiver<T> receiver) {
     socket.addPacketListener(receiver);
   }
 
@@ -121,7 +121,7 @@ public class SquareTreeConnection {
    * @param <T>      the type parameter
    * @param receiver the receiver
    */
-  <T extends Packet<?>> void removePacketListener(PacketReceiver<T> receiver) {
+  public <T extends Packet<?>> void removePacketListener(PacketReceiver<T> receiver) {
     socket.removePacketListener(receiver);
   }
 
@@ -133,7 +133,7 @@ public class SquareTreeConnection {
    * @param packetClass the packet class
    * @return the packet receiver
    */
-  <T extends Packet<?>> PacketReceiver<T> addPacketListener(Consumer<T> receiver, Class<T> packetClass) {
+  public <T extends Packet<?>> PacketReceiver<T> addPacketListener(Consumer<T> receiver, Class<T> packetClass) {
     return socket.addPacketListener((a, b) -> receiver.accept(a), packetClass);
   }
 
