@@ -16,7 +16,7 @@ The application consists of several parts.
 
 The Server-Application has a controlling terminal and a module system.
 
-##Documentation
-* [Wiki]
+## Documentation
+* [Wiki](https://github.com/APICodeYT/SquareTree/wiki)
 * [Docs]
 
