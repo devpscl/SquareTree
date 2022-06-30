@@ -24,7 +24,7 @@ The Server-Application has a controlling terminal and a module system.
 
 ## Documentation
 * [Wiki](https://github.com/APICodeYT/SquareTree/wiki)
-* [Docs]
+* [Docs](https://apicodeyt.github.io/SquareTree/)
 
 ## Maven
 
