@@ -70,7 +70,7 @@ class SquareTree extends SquareTreeServer {
       moduleContext.getModule().start();
       terminal.printInfo(moduleContext.getModule().getName() + " is enable!");
     }
-    terminal.registerCommand(new ExitCommand(this), "exit", "shutdown");
+    terminal.registerCommand(new ExitCommand(this), "exit", "shutdown", "stop");
   }
 
   @Override
