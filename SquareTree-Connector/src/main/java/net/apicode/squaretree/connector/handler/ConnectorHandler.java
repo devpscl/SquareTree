@@ -1,6 +1,5 @@
 package net.apicode.squaretree.connector.handler;
 
-import net.apicode.squaretree.connector.SquareTreeConnection;
 import net.apicode.squaretree.network.BridgeSocket;
 
 public interface ConnectorHandler {

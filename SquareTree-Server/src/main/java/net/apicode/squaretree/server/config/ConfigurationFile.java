@@ -1,5 +1,10 @@
 package net.apicode.squaretree.server.config;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -7,22 +12,17 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.LinkedHashMap;
 import java.util.Set;
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.DumperOptions.FlowStyle;
-import org.yaml.snakeyaml.Yaml;
 
 public class ConfigurationFile {
 
+  private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
   private final File file;
-  private LinkedHashMap<String, Object> map = new LinkedHashMap<>();
-  private final Yaml yaml;
+  private JsonObject object = new JsonObject();
 
   public ConfigurationFile(File file) {
     this.file = file;
-    DumperOptions options = new DumperOptions();
-    options.setDefaultFlowStyle(FlowStyle.BLOCK);
-    options.setPrettyFlow(true);
-    yaml = new Yaml(options);
+
 
     if(file.exists()) {
       load();
@@ -41,20 +41,25 @@ public class ConfigurationFile {
     }
   }
 
-  public void set(String key, Object value) {
-    map.put(key, value);
+  public void set(String key, JsonElement value) {
+    object.add(key, value);
   }
 
-  public Object get(String key) {
-    return map.get(key);
+  public JsonObject getAsJsonObject() {
+    return object;
+  }
+
+  public JsonElement get(String key) {
+    if(!containsKey(key)) return null;
+    return object.get(key);
   }
 
   public Set<String> keys() {
-    return map.keySet();
+    return object.keySet();
   }
 
   public boolean containsKey(String key) {
-    return map.containsKey(key);
+    return object.has(key);
   }
 
   public File getFile() {
@@ -63,7 +68,8 @@ public class ConfigurationFile {
 
   public void load(){
     try {
-      map = yaml.load(new FileReader(file));
+      JsonElement jsonElement = JsonParser.parseReader(new FileReader(file));
+      object = jsonElement.getAsJsonObject();
     } catch (FileNotFoundException e) {
       throw new RuntimeException("Failed to load file", e);
     }
@@ -71,9 +77,9 @@ public class ConfigurationFile {
 
   public void save() {
     if(existsFile()) {
-      try {
-        PrintWriter writer = new PrintWriter(file);
-        yaml.dump(map, writer);
+      String output = gson.toJson(object);
+      try(PrintWriter writer = new PrintWriter(file)) {
+        writer.write(output);
       } catch (IOException e) {
         throw new RuntimeException("Failed to save file", e);
       }
