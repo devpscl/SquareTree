@@ -16,6 +16,12 @@ The application consists of several parts.
 
 The Server-Application has a controlling terminal and a module system.
 
+| OS      	| Supported 	|
+|---------	|-----------	|
+| Windows 	| yes       	|
+| Linux   	| yes       	|
+| Macos   	| no        	|
+
 ## Documentation
 * [Wiki](https://github.com/APICodeYT/SquareTree/wiki)
 * [Docs]
