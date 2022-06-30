@@ -1,12 +1,9 @@
 package net.apicode.squaretree.network;
 
-import com.sun.javafx.collections.UnmodifiableListSet;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import net.apicode.squaretree.network.handler.NetworkHandler;
 import net.apicode.squaretree.network.handler.PacketReceiver;
 import net.apicode.squaretree.network.packet.Packet;
@@ -82,7 +79,7 @@ public abstract class BridgeNetwork implements ProtocolManager, PacketAdapter {
       PrioritizedList<PacketReceiver<?>> packetReceivers = packetListeners.get(packetClass);
       return Collections.unmodifiableCollection(packetReceivers);
     }
-    return new UnmodifiableListSet<>(new ArrayList<>());
+    return new ArrayList<>();
   }
 
   /**

@@ -133,7 +133,7 @@ public class ModuleManager {
     }
   }
 
-  private void startModule(ModuleContext context) throws ModuleException {
+  public void startModule(ModuleContext context) throws ModuleException {
     try {
       context.getModule().start();
     } catch (Exception e) {

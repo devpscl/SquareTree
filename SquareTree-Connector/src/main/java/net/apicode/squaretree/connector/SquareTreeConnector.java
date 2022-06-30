@@ -32,7 +32,12 @@ public class SquareTreeConnector {
   }
 
   public SquareTreeConnection connect(ConnectorHandler connectorHandler) throws NetworkException {
-    BridgeSocket socket = new BridgeSocket(connectionInfo, securityInfo, nodeId, new HandlerAdapter(connectorHandler));
+    BridgeSocket socket;
+    if(connectorHandler == null) {
+      socket = new BridgeSocket(connectionInfo, securityInfo, nodeId);
+    } else {
+      socket = new BridgeSocket(connectionInfo, securityInfo, nodeId, new HandlerAdapter(connectorHandler));
+    }
     return new SquareTreeConnection(socket);
   }
 }

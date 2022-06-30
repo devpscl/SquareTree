@@ -1,5 +1,6 @@
 package net.apicode.squaretree.server.config;
 
+import com.google.gson.JsonPrimitive;
 import java.io.File;
 import net.apicode.squaretree.network.util.ConnectionInfo;
 import net.apicode.squaretree.network.util.SecurityInfo;
@@ -9,37 +10,37 @@ public class SettingConfiguration {
   private final ConfigurationFile cf;
 
   public SettingConfiguration() {
-    cf = new ConfigurationFile(new File("config.yml"));
+    cf = new ConfigurationFile(new File("config.json"));
     if(!cf.existsFile()) {
       cf.createFile();
-      cf.set("private-key", SecurityInfo.DEFAULT.getPrivateKey());
-      cf.set("crypto-key", "null");
-      cf.set("crypto-enabled", false);
-      cf.set("host-address", "localhost");
-      cf.set("port", ConnectionInfo.builder().getPort());
+      cf.set("private-key", new JsonPrimitive(SecurityInfo.DEFAULT.getPrivateKey()));
+      cf.set("crypto-key", new JsonPrimitive("null"));
+      cf.set("crypto-enabled", new JsonPrimitive(false));
+      cf.set("host-address", new JsonPrimitive("localhost"));
+      cf.set("port", new JsonPrimitive(ConnectionInfo.builder().getPort()));
       cf.save();
     }
   }
 
   public String getHostAddress() {
-    return (String) cf.get("host-address");
+    return cf.get("host-address").getAsString();
   }
 
   public int getPort() {
-    return (int) cf.get("port");
+    return cf.get("port").getAsInt();
   }
 
   public String getPrivateKey() {
-    return (String) cf.get("private-key");
+    return cf.get("private-key").getAsString();
   }
 
   public boolean isCryptoEnabled() {
-    return (boolean) cf.get("crypto-enabled");
+    return cf.get("crypto-enabled").getAsBoolean();
   }
 
   public String getCryptoKey() {
     if(!isCryptoEnabled()) return null;
-    return (String) cf.get("crypto-key");
+    return (String) cf.get("crypto-key").getAsString();
   }
 
 
