@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.function.Consumer;
 import net.apicode.jbasedconsole.platform.Console;
 import net.apicode.jbasedconsole.platform.input.ConsoleInput;
@@ -24,7 +26,7 @@ public class SquareTreeTerminal implements Terminal {
   private static final SimpleDateFormat terminalDateFormat = new SimpleDateFormat("HH:mm:ss");
 
   private final Console console;
-  private final HashMap<String, Command> commandHashMap = new HashMap<>();
+  private final Map<String, Command> commandHashMap = new TreeMap<>();
   private final List<CommandInput> history = new ArrayList<>();
   private final CommandInput input = new CommandInput();
   private int historyPointer = 0;
@@ -33,12 +35,14 @@ public class SquareTreeTerminal implements Terminal {
   private final InputReader inputReader;
   private final String prefix;
   private final Logger logger;
+  private final TabCompleter tabCompleter;
 
   public SquareTreeTerminal(Logger logger, Console console) {
     this.console = console;
     this.logger = logger;
     console.setTitle("SquareTree");
     inputReader = new InputReader(this::handleInput);
+    tabCompleter = new TabCompleter(this);
     SystemInformation current = SystemInformation.current();
     prefix = new ConsoleStringBuilder()
         .foreground(76)
@@ -49,6 +53,10 @@ public class SquareTreeTerminal implements Terminal {
         .reset()
         .toConsoleString();
 
+  }
+
+  public Map<String, Command> getCommandMap() {
+    return commandHashMap;
   }
 
   public void enableCommandInput() {
@@ -63,6 +71,11 @@ public class SquareTreeTerminal implements Terminal {
   private void handleInput(ConsoleInput consoleInput) {
     if(!isCommandLineAvailable()) return;
     InputType type = consoleInput.getType();
+    if(type == InputType.KEY_TAB) {
+      tabCompleter.tab();
+    } else {
+      tabCompleter.endTab();
+    }
     if(type == InputType.LETTER || type == InputType.NORMAL_SYMBOL || type == InputType.NUMBER) {
       input(consoleInput.getInput());
     } else if(type == InputType.KEY_SPACE) {
@@ -74,15 +87,13 @@ public class SquareTreeTerminal implements Terminal {
     } else if(type == InputType.KEY_ARROW_DOWN) {
       down();
     } else if(type == InputType.KEY_ENTER) {
-      if(!input.getString().trim().isEmpty()) {
+      if(!input.getString().trim().isEmpty() || historyPointer < history.size()) {
         commandInputAvailable = false;
-        CommandInput commandInput = input.clone();
-        if(historyPointer < history.size()) {
-          commandInput = history.get(historyPointer);
-        }
+        CommandInput commandInput = getCurrentInput().clone();
         history.add(commandInput.clone());
         historyPointer = history.size();
         input.set(StringUtil.EMPTY_STRING);
+        console.write("\n");
         boolean state = dispatchCommand(commandInput.getString());
         if(!state) {
           printInfo("Command not found.");
@@ -115,6 +126,17 @@ public class SquareTreeTerminal implements Terminal {
       input.set(history.get(historyPointer).toString());
       historyPointer = history.size();
       input(c);
+    }
+  }
+
+  public void setInput(String s) {
+    if(historyPointer >= history.size()) {
+      input.set(s);
+      updateCommandLine();
+    } else {
+      input.set(history.get(historyPointer).toString());
+      historyPointer = history.size();
+      setInput(s);
     }
   }
 
@@ -214,7 +236,11 @@ public class SquareTreeTerminal implements Terminal {
 
   @Override
   public CommandInput getCurrentInput() {
-    return input;
+    CommandInput cmdInput = input;
+    if(historyPointer < history.size()) {
+      cmdInput = history.get(historyPointer);
+    }
+    return cmdInput;
   }
 
   @Override
@@ -233,10 +259,7 @@ public class SquareTreeTerminal implements Terminal {
   @Override
   public void updateCommandLine() {
     if(isCommandLineAvailable()) {
-      CommandInput cmdInput = input;
-      if(historyPointer < history.size()) {
-        cmdInput = history.get(historyPointer);
-      }
+      CommandInput cmdInput = getCurrentInput();
       console.clearLine();
       console.moveCursorLeft(9999);
       console.write(prefix);
@@ -259,7 +282,11 @@ public class SquareTreeTerminal implements Terminal {
     if(command == null) {
       return false;
     }
-    command.command(Arrays.copyOfRange(array, 1, array.length), this);
+    try {
+      command.command(Arrays.copyOfRange(array, 1, array.length), this);
+    } catch (Exception e) {
+      printError("Error at command " + cmd, e);
+    }
     return true;
   }
 }

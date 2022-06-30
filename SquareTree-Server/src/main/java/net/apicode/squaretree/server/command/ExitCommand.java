@@ -17,4 +17,5 @@ public class ExitCommand implements Command {
     terminal.writeLine("shutdown...");
     squareTree.shutdown();
   }
+
 }
