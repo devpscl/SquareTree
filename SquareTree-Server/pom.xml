@@ -6,7 +6,15 @@
 
   <groupId>net.apicode</groupId>
   <artifactId>squaretree-server</artifactId>
-  <version>1.0</version>
+  <version>1.0.0</version>
+
+  <distributionManagement>
+    <repository>
+      <id>github</id>
+      <name>APICodeYT</name>
+      <url>https://maven.pkg.github.com/APICodeYT/SquareTree</url>
+    </repository>
+  </distributionManagement>
 
   <build>
     <plugins>
