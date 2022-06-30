@@ -26,3 +26,22 @@ The Server-Application has a controlling terminal and a module system.
 * [Wiki](https://github.com/APICodeYT/SquareTree/wiki)
 * [Docs]
 
+## Maven
+
+```xml
+<dependencies>
+  <!-- Server API -->
+  <dependency>
+    <groupId>net.apicode</groupId>
+    <artifactId>squaretree-server</artifactId>
+    <version>{{VERSION}}</version>
+  </dependency>
+  
+  <!-- Connector API -->
+  <dependency>
+    <groupId>net.apicode</groupId>
+    <artifactId>squaretree-connector</artifactId>
+    <version>{{VERSION}}</version>
+  </dependency>
+</dependencies>
+```
