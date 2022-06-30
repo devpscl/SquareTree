@@ -1,7 +1,7 @@
 <div align="center">
 <br/>
   <p>
-    <img src="https://img.shields.io/static/v1?label=Version&message=Alpha-1.0.0&color=12c970&logoColor=white" alt="Version" />
+    <img src="https://img.shields.io/static/v1?label=Version&message=1.0.0&color=12c970&logoColor=white" alt="Version" />
 	<br>
 	</p>
   </p>
