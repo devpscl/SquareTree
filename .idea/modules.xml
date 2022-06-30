@@ -2,9 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/SquareTree.iml" filepath="$PROJECT_DIR$/SquareTree.iml" />
-      <module fileurl="file://$PROJECT_DIR$/SquareTree-Network.iml" filepath="$PROJECT_DIR$/SquareTree-Network.iml" />
-      <module fileurl="file://$PROJECT_DIR$/SquareTree-Server.iml" filepath="$PROJECT_DIR$/SquareTree-Server.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/SquareTree.iml" filepath="$PROJECT_DIR$/.idea/SquareTree.iml" />
+      <module fileurl="file://$PROJECT_DIR$/SquareTree-Connector/squaretree-connector.iml" filepath="$PROJECT_DIR$/SquareTree-Connector/squaretree-connector.iml" />
+      <module fileurl="file://$PROJECT_DIR$/SquareTree-CoreModule/squaretree-coremodule.iml" filepath="$PROJECT_DIR$/SquareTree-CoreModule/squaretree-coremodule.iml" />
+      <module fileurl="file://$PROJECT_DIR$/SquareTree-Network/squaretree-network.iml" filepath="$PROJECT_DIR$/SquareTree-Network/squaretree-network.iml" />
+      <module fileurl="file://$PROJECT_DIR$/SquareTree-Server/squaretree-server.iml" filepath="$PROJECT_DIR$/SquareTree-Server/squaretree-server.iml" />
     </modules>
   </component>
 </project>
