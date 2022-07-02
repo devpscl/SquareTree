@@ -12,6 +12,7 @@ import net.apicode.squaretree.network.util.ConnectionInfo;
 import net.apicode.squaretree.network.util.NodeId;
 import net.apicode.squaretree.network.util.SecurityInfo;
 import net.apicode.squaretree.network.util.function.DoubleConsumer;
+import net.apicode.squaretree.server.api.terminal.Terminal;
 
 /**
  * The interface Network manager.
@@ -122,5 +123,9 @@ public interface NetworkManager {
    * @throws NetworkException the network exception
    */
   void registerPacket(Class<? extends Packet<?>> packetClass) throws NetworkException;
+
+  static NetworkManager getInstance() {
+    return SquareTreeServer.getInstance().getNetworkManager();
+  }
 
 }

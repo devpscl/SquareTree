@@ -3,6 +3,7 @@ package net.apicode.squaretree.server.api.terminal;
 import java.util.List;
 import java.util.function.Consumer;
 import net.apicode.jbasedconsole.platform.Console;
+import net.apicode.squaretree.server.api.SquareTreeServer;
 import net.apicode.squaretree.server.terminal.CommandInput;
 
 public interface Terminal {
@@ -36,5 +37,9 @@ public interface Terminal {
   void updateCommandLine();
 
   boolean isCommandLineAvailable();
+
+  static Terminal getInstance() {
+    return SquareTreeServer.getInstance().getTerminal();
+  }
 
 }
